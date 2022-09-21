@@ -13,7 +13,6 @@ contract XRC100 is ERC1155, XRC100_Interface {
     //Account Details
     struct Tokens{
         uint amount;
-        bool exist;
     }
     //launch Contract
     constructor(string memory URI,uint _totalSupply) ERC1155(URI) {
@@ -52,6 +51,7 @@ contract XRC100 is ERC1155, XRC100_Interface {
     }
     //Account of your funds in contract
     function View_Account(uint _token) public view returns(uint){
+        require(_token<=totalSupply,"incorrect token number");
         return accounts[_token].amount;
     }
     //Redeem Dividends from treasury
@@ -61,9 +61,10 @@ contract XRC100 is ERC1155, XRC100_Interface {
         for(uint tokens=0;tokens<=totalSupply;tokens++){
             if(balanceOf(msg.sender,tokens) == 1){
                 total += accounts[tokens].amount;
+                accounts[tokens].amount = 0;
             }
-            RedeemAddress.transfer(total);
-        }        
+        }    
+        RedeemAddress.transfer(total);    
         return true;     
     }
     //Payments made to the contract
