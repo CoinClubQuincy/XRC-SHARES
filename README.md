@@ -1,3 +1,3 @@
 # XRC-100
 
-![SHARD](https://user-images.githubusercontent.com/16103963/191802374-9ae57515-c794-472b-8156-cb735d947080.png)
+![SHARD-2](https://user-images.githubusercontent.com/16103963/191804062-2ce42e07-9ca0-4838-a8c4-aa97cf4315da.jpeg)
