@@ -1,7 +1,6 @@
 pragma solidity ^0.8.10;
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 interface XRC100_Interface {
     function View_Account(uint _token) external view returns(uint);
@@ -47,15 +46,9 @@ contract XRC100 is ERC1155, XRC100_Interface {
     //Accept payment from CoinBank and issue dividends to accounts
     function callFromFallback(uint _singleShard)internal{
         uint CurrentCount=0;
-        //Fix Gas ploblem
-        for(CurrentCount;CurrentCount<totalSupply-1;CurrentCount++){
-            InternalAccounting(CurrentCount,_singleShard);
+        for(CurrentCount;CurrentCount<=totalSupply-1;CurrentCount++){
+            accounts[CurrentCount].amount +=  _singleShard;
         }
-    }
-    //Sorts funds into accounts
-    function InternalAccounting(uint _shard,uint _singleShard)internal returns(uint){
-        accounts[_shard].amount +=  _singleShard;
-        return (_shard);      
     }
     //Account of your funds in contract
     function View_Account(uint _token) public view returns(uint){
@@ -90,7 +83,7 @@ interface XRC101_Interface {
 contract XRC101 is ERC1155, XRC100_Interface {
     uint public totalSupply;
     uint public shardToken;
-    XRC100 SHARD;
+    XRC100 public SHARD;
     //mappings map Account amounts and micro ledger
     mapping (uint => Tokens) public accounts;
     //Account Details
@@ -129,14 +122,9 @@ contract XRC101 is ERC1155, XRC100_Interface {
     function callFromFallback(uint _singleShard)internal{
         uint CurrentCount=0;
         //Fix Gas ploblem
-        for(CurrentCount;CurrentCount<totalSupply-1;CurrentCount++){
-            InternalAccounting(CurrentCount,_singleShard);
+        for(CurrentCount;CurrentCount<=totalSupply-1;CurrentCount++){
+            accounts[CurrentCount].amount +=  _singleShard;
         }
-    }
-    //Sorts funds into accounts
-    function InternalAccounting(uint _shard,uint _singleShard)internal returns(uint){
-        accounts[_shard].amount +=  _singleShard;
-        return (_shard);      
     }
     //Account of your funds in contract
     function View_Account(uint _token) public view returns(uint){
@@ -176,7 +164,6 @@ contract XRC101 is ERC1155, XRC100_Interface {
         }
         return true;
     }
-
     //ERC1155Received fuctions
     function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
         return this.onERC1155Received.selector;
