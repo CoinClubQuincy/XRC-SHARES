@@ -11,7 +11,6 @@ contract XRC100 is ERC1155, XRC100_Interface {
     string public name;
     string public symbol;
     uint public totalSupply;
-    string public tag;
     //mappings map Account amounts and micro ledger
     mapping (uint => Tokens) public accounts;
     //Account Details
@@ -91,7 +90,6 @@ interface XRC101_Interface {
 contract XRC101 is ERC1155, XRC100_Interface {
     uint public totalSupply;
     uint public shardToken;
-    string public tag;
     XRC100 SHARD;
     //mappings map Account amounts and micro ledger
     mapping (uint => Tokens) public accounts;
@@ -106,7 +104,6 @@ contract XRC101 is ERC1155, XRC100_Interface {
         shardToken = _shard;
         SHARD = XRC100(_shardContract);
         totalSupply = SHARD.totalSupply();
-        tag = SHARD.tag();
         
         safeTransferFrom(msg.sender, address(this), _shard, 1, "");
   
