@@ -86,6 +86,7 @@ contract XRC101 is ERC1155, XRC101_Interface {
     uint[] tokenList;
     uint[] tokenCount;
     XRC100 public SHARD;
+    bool public activated;
     //mappings map Account amounts and micro ledger
     mapping (uint => Tokens) public accounts;
     //Account Details
@@ -96,7 +97,7 @@ contract XRC101 is ERC1155, XRC101_Interface {
     constructor(address _shardContract)ERC1155("{name:SPLIT, token:{id}}") { 
         SHARD = XRC100(payable(_shardContract));
         totalSupply = SHARD.totalSupply();
-        for(uint count=0;count<=totalSupply;count++){
+        for(uint count=0;count<=totalSupply-1;count++){
             tokenList.push(count);
             tokenCount.push(1);
         }
@@ -126,13 +127,16 @@ contract XRC101 is ERC1155, XRC101_Interface {
     function activateContract(uint _shard) public returns(bool){
         require(SHARD.balanceOf(msg.sender,_shard) == 1, "you must hold shard token");
         require(SHARD.isApprovedForAll(msg.sender,address(this))==true,"isApprovedForAll on SHARD contract is false must equal true");
-        
+        require(activated == false, " contract already activated");
+
         shardToken = _shard;
         SHARD.safeTransferFrom(msg.sender, address(this), _shard,1,"");
         
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
             _mint(msg.sender,tokens, 1, "");
         }
+        activated = true;
+        return true;
     }
     //Account of your funds in contract
     function View_Account(uint _token) public view returns(uint,uint,uint){
@@ -157,9 +161,11 @@ contract XRC101 is ERC1155, XRC101_Interface {
     function RedeemShard()public TokenHolder returns(bool,bool){
         require(SHARD.balanceOf(address(this),shardToken) == 1, "contract not activated");
         if(checkAllTokens() == true){
-            safeBatchTransferFrom(msg.sender, address(this), tokenList,tokenCount,"");
+            _burnBatch(msg.sender, tokenList,tokenCount);
             safeTransferFrom(address(this),msg.sender,shardToken, 1, "");
+            activated = false;
             return (true,true);
+
         }
         SHARD.Redeem();
         return (true,false);
