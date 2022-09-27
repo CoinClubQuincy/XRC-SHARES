@@ -55,6 +55,15 @@ contract XRC100 is ERC1155, XRC100_Interface {
         require(_token<=totalSupply-1,"incorrect token number");
         return accounts[_token].amount;
     }
+    function View_Total() public view returns(uint){
+        uint total=0;
+        for(uint tokens=0;tokens<=totalSupply-1;tokens++){
+            if(balanceOf(msg.sender,tokens) == 1){
+                total += View_Account(tokens);
+            }
+        }       
+        return total;
+    }
     //Redeem Dividends from treasury
     function Redeem()public TokenHolder returns(bool){
         address payable RedeemAddress = payable(msg.sender);
@@ -78,7 +87,7 @@ contract XRC100 is ERC1155, XRC100_Interface {
 interface XRC101_Interface {
     function View_Account(uint _token) external view returns(uint,uint,uint);
     function Redeem()external returns(bool);  
-    function RedeemShard()external returns(bool,bool);
+    function RedeemShard()external returns(bool);
 }
 contract XRC101 is ERC1155, XRC101_Interface {
     uint public totalSupply;
@@ -158,17 +167,16 @@ contract XRC101 is ERC1155, XRC101_Interface {
         RedeemAddress.transfer(total);    
         return true;     
     }
-    function RedeemShard()public TokenHolder returns(bool,bool){
+    function RedeemShard()public TokenHolder returns(bool){
         require(SHARD.balanceOf(address(this),shardToken) == 1, "contract not activated");
-        if(checkAllTokens() == true){
-            _burnBatch(msg.sender, tokenList,tokenCount);
-            safeTransferFrom(address(this),msg.sender,shardToken, 1, "");
-            activated = false;
-            return (true,true);
+        require(checkAllTokens() == true,"you must hold all splits");
 
-        }
         SHARD.Redeem();
-        return (true,false);
+
+        _burnBatch(msg.sender, tokenList,tokenCount);
+        SHARD.safeTransferFrom(address(this),msg.sender,shardToken, 1, "");
+        activated = false;
+        return (true);
     }
     function checkAllTokens()internal view returns(bool){
         for(uint count=0;count<=totalSupply-1;count++){
