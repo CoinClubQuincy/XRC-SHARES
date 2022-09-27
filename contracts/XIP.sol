@@ -76,13 +76,15 @@ contract XRC100 is ERC1155, XRC100_Interface {
 }
 
 interface XRC101_Interface {
-    function View_Account(uint _token) external view returns(uint);
+    function View_Account(uint _token) external view returns(uint,uint,uint);
     function Redeem()external returns(bool);  
-    function RedeemShard()external returns(bool);
+    function RedeemShard()external returns(bool,bool);
 }
-contract XRC101 is ERC1155, XRC100_Interface {
+contract XRC101 is ERC1155, XRC101_Interface {
     uint public totalSupply;
     uint public shardToken;
+    uint[] tokenList;
+    uint[] tokenCount;
     XRC100 public SHARD;
     //mappings map Account amounts and micro ledger
     mapping (uint => Tokens) public accounts;
@@ -91,17 +93,12 @@ contract XRC101 is ERC1155, XRC100_Interface {
         uint amount;
     }
     //launch Contract
-    constructor(address payable _shardContract,uint _shard) ERC1155("{name:SPLIT, token:{id}}") { 
-        require(balanceOf(msg.sender,_shard) == 1,"must hold shard to start contract");
-
-        shardToken = _shard;
-        SHARD = XRC100(_shardContract);
+    constructor(address _shardContract)ERC1155("{name:SPLIT, token:{id}}") { 
+        SHARD = XRC100(payable(_shardContract));
         totalSupply = SHARD.totalSupply();
-        
-        safeTransferFrom(msg.sender, address(this), _shard, 1, "");
-  
-        for(uint tokens=0;tokens<=totalSupply-1;tokens++){
-            _mint(msg.sender,tokens, 1, "");
+        for(uint count=0;count<=totalSupply;count++){
+            tokenList.push(count);
+            tokenCount.push(1);
         }
     }
     //Only Token Holders can use contract
@@ -126,11 +123,22 @@ contract XRC101 is ERC1155, XRC100_Interface {
             accounts[CurrentCount].amount +=  _singleShard;
         }
     }
+    function activateContract(uint _shard) public returns(bool){
+        require(SHARD.balanceOf(msg.sender,_shard) == 1, "you must hold shard token");
+        require(SHARD.isApprovedForAll(msg.sender,address(this))==true,"isApprovedForAll on SHARD contract is false must equal true");
+        
+        shardToken = _shard;
+        SHARD.safeTransferFrom(msg.sender, address(this), _shard,1,"");
+        
+        for(uint tokens=0;tokens<=totalSupply-1;tokens++){
+            _mint(msg.sender,tokens, 1, "");
+        }
+    }
     //Account of your funds in contract
-    function View_Account(uint _token) public view returns(uint){
+    function View_Account(uint _token) public view returns(uint,uint,uint){
         require(_token<=totalSupply-1,"incorrect token number");
         uint total = accounts[_token].amount + (SHARD.View_Account(shardToken)/totalSupply);
-        return total;
+        return (accounts[_token].amount,SHARD.View_Account(shardToken)/totalSupply,total);
     }
     //Redeem Dividends from treasury
     function Redeem()public TokenHolder returns(bool){
@@ -147,7 +155,9 @@ contract XRC101 is ERC1155, XRC100_Interface {
         return true;     
     }
     function RedeemShard()public TokenHolder returns(bool,bool){
+        require(SHARD.balanceOf(address(this),shardToken) == 1, "contract not activated");
         if(checkAllTokens() == true){
+            safeBatchTransferFrom(msg.sender, address(this), tokenList,tokenCount,"");
             safeTransferFrom(address(this),msg.sender,shardToken, 1, "");
             return (true,true);
         }
@@ -180,4 +190,3 @@ contract XRC101 is ERC1155, XRC100_Interface {
         callFromFallback(single_Shard); 
     }
 }
-
