@@ -53,11 +53,12 @@ contract lemonadeStand is XRC100{
 	constructor(string  memory _name,string  memory _symbol,uint _totalSupply) XRC100(_name,_symbol,_totalSupply){}
 
 	function GlassOfLemonade()  public  payable  returns(bool){
-		require(msg.value ==  100000000000000000000,"need more funds");
+	    require(msg.value ==  100000000000000000000,"need more funds");
 
-		//this call can be used in all functions that recive fees
-		address(this).call{value:  msg.value};  //use this to forward all funds to the receive function
-		return  true;
+	    //this call can be used in all functions that recive fees
+	    //this will forward all funds to the receive() function
+	    address(this).call{value:  msg.value};  
+	    return  true;
 	}
 }
 ````
