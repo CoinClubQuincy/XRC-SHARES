@@ -29,6 +29,7 @@ contract XRC101 is ERC1155, XRC101_Interface {
     //launch Contract
     constructor(address payable _shardContract)ERC1155("{name:SPLIT, token:{id}}") { 
         SHARD = XRC100(payable(_shardContract));
+
         name= SHARD.name();
         symbol= SHARD.symbol();
         totalSupply = SHARD.totalSupply();
@@ -93,12 +94,11 @@ contract XRC101 is ERC1155, XRC101_Interface {
                 accounts[tokens].amount = 0;
             }
         }    
-        RedeemAddress.transfer(total);    
+        RedeemAddress.call{value: total}("");     
         return true;     
     }
     function redeemPush() public returns(bool){
-        SHARD.Redeem();
-        return true;
+        return SHARD.Redeem();
     }
     function RedeemShard()public TokenHolder returns(string memory){
         require(SHARD.balanceOf(address(this),shardToken) == 1, "contract not activated");

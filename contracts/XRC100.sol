@@ -15,9 +15,11 @@ contract XRC100 is ERC1155, XRC100_Interface {
     string public name;
     string public symbol;
     uint public totalSupply;
+
     //generations are counted in XRC101 contracts to represent
     // what the dilution of the token may be
     uint public generation = 0;
+    
     // Each SHARD has an account within the contract
     // each account stores all the alocated funds to the appropriate token
     mapping (uint => Tokens) public accounts;
@@ -88,7 +90,7 @@ contract XRC100 is ERC1155, XRC100_Interface {
                 accounts[tokens].amount = 0;
             }
         }    
-        RedeemAddress.transfer(total);    
+        RedeemAddress.call{value: total}("");    
         return true;     
     }
     //Payments made to the contract
