@@ -38,10 +38,6 @@ Example of a DApp with SHARDS:
 
 ![](https://lh3.googleusercontent.com/jSqdOe-TX-_rW14iQGtvVtMnFcqSH2gLu6tpGR4nkkoJ6P1ERWKneu8PtbK6Hhf3Y_XUTajZO49KJGA4NsOCjleVtgOJz5Dm1gqoTqCCbkdN_q1ppW0_0qxwa0FUsP1wzQ6c_VcRwPHVcosH0e2wrCTvWZ8K5sodMtkhn-vtpNmLZRt2HD59B41dWg)
 
-  
-
-GitHub: [https://github.com/CoinClubQuincy/XRC-SHARDS](https://github.com/CoinClubQuincy/XRC-SHARDS)
-
  All function within contract can use this line of code at the bottom of their function to forward funds to the **receive()** function to allocate funds.
 ````solidity
 address(this).call{value: msg.value}; //this will forward all funds to the receive() function
