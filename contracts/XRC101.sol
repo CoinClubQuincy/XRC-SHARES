@@ -24,6 +24,7 @@ contract XRC101 is ERC1155, XRC101_Interface {
     //Account Details
     struct Tokens{
         uint amount;
+        bool exist;
     }
     //launch Contract
     constructor(address payable _shardContract)ERC1155("{name:SPLIT, token:{id}}") { 
@@ -69,6 +70,7 @@ contract XRC101 is ERC1155, XRC101_Interface {
         SHARD.safeTransferFrom(msg.sender, address(this), _shard,1,"");
         
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
+            accounts[tokens] = Tokens(0,true);
             _mint(msg.sender,tokens, 1, "");
         }
         activated = true;
