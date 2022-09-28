@@ -1,3 +1,4 @@
-# XIP-100 | XIP-101
+# XRC-100 | XRC-101
 
-![SHARD-2](https://user-images.githubusercontent.com/16103963/191804062-2ce42e07-9ca0-4838-a8c4-aa97cf4315da.jpeg)
+
+![SHARD-2](https://user-images.githubusercontent.com/16103963/192686326-402c4ce2-f9a3-47c1-adf8-59088b2ea7ac.png)
