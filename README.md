@@ -39,9 +39,6 @@ Example of a DaApp with SHARDS:
 
 ![](https://lh3.googleusercontent.com/jSqdOe-TX-_rW14iQGtvVtMnFcqSH2gLu6tpGR4nkkoJ6P1ERWKneu8PtbK6Hhf3Y_XUTajZO49KJGA4NsOCjleVtgOJz5Dm1gqoTqCCbkdN_q1ppW0_0qxwa0FUsP1wzQ6c_VcRwPHVcosH0e2wrCTvWZ8K5sodMtkhn-vtpNmLZRt2HD59B41dWg)
 
-  
-
-GitHub: [https://github.com/CoinClubQuincy/XRC-SHARDS](https://github.com/CoinClubQuincy/XRC-SHARDS)
 
   
 
