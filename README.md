@@ -39,6 +39,28 @@ Example of a DaApp with SHARDS:
 
 ![](https://lh3.googleusercontent.com/jSqdOe-TX-_rW14iQGtvVtMnFcqSH2gLu6tpGR4nkkoJ6P1ERWKneu8PtbK6Hhf3Y_XUTajZO49KJGA4NsOCjleVtgOJz5Dm1gqoTqCCbkdN_q1ppW0_0qxwa0FUsP1wzQ6c_VcRwPHVcosH0e2wrCTvWZ8K5sodMtkhn-vtpNmLZRt2HD59B41dWg)
 
+All function within contract can use this line of code at the bottom of their function to forward funds to the **receive()** function to allocate funds.
+````solidity
+    address(this).call{value: msg.value};
+````
+This contract bellow is an example of a lemonade stand contract that receives 100XDC for a glass of lemonade and divides those funds amongst 10 token holders
+
+````solidity
+contract lemonadeStand is XRC100{
+	constructor(string  memory _name,string  memory _symbol,uint _totalSupply) XRC100(_name,_symbol,_totalSupply){}
+
+	function GlassOfLemonade()  public  payable  returns(bool){
+		require(msg.value ==  100000000000000000000,"need more funds");
+
+		//this call can be used in all functions that recive fees
+		address(this).call{value:  msg.value};  //use this to forward all funds to the receive function
+		return  true;
+	}
+}
+````
+## Security Considerations
+**WARNING: Lost SHARDS will result in the portion of funds allocated to the token to also be lost**
+
 
   
 
