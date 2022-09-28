@@ -10,6 +10,7 @@ contract XRC100 is ERC1155, XRC100_Interface {
     string public name;
     string public symbol;
     uint public totalSupply;
+    uint public generation = 0;
     //mappings map Account amounts and micro ledger
     mapping (uint => Tokens) public accounts;
     //Account Details
@@ -87,11 +88,15 @@ contract XRC100 is ERC1155, XRC100_Interface {
 interface XRC101_Interface {
     function View_Account(uint _token) external view returns(uint,uint,uint);
     function Redeem()external returns(bool);  
-    function RedeemShard()external returns(bool);
+    function RedeemShard()external returns(string memory);
 }
 contract XRC101 is ERC1155, XRC101_Interface {
+    string public name;
+    string public symbol;
     uint public totalSupply;
     uint public shardToken;
+    uint public generation;
+
     uint[] tokenList;
     uint[] tokenCount;
     XRC100 public SHARD;
@@ -103,9 +108,13 @@ contract XRC101 is ERC1155, XRC101_Interface {
         uint amount;
     }
     //launch Contract
-    constructor(address _shardContract)ERC1155("{name:SPLIT, token:{id}}") { 
+    constructor(address payable _shardContract)ERC1155("{name:SPLIT, token:{id}}") { 
         SHARD = XRC100(payable(_shardContract));
+        name= SHARD.name();
+        symbol= SHARD.symbol();
         totalSupply = SHARD.totalSupply();
+        generation = SHARD.generation()+1;
+        
         for(uint count=0;count<=totalSupply-1;count++){
             tokenList.push(count);
             tokenCount.push(1);
@@ -167,16 +176,19 @@ contract XRC101 is ERC1155, XRC101_Interface {
         RedeemAddress.transfer(total);    
         return true;     
     }
-    function RedeemShard()public TokenHolder returns(bool){
+    function redeemPush() public returns(bool){
+        SHARD.Redeem();
+        return true;
+    }
+    function RedeemShard()public TokenHolder returns(string memory){
         require(SHARD.balanceOf(address(this),shardToken) == 1, "contract not activated");
         require(checkAllTokens() == true,"you must hold all splits");
-
-        SHARD.Redeem();
 
         _burnBatch(msg.sender, tokenList,tokenCount);
         SHARD.safeTransferFrom(address(this),msg.sender,shardToken, 1, "");
         activated = false;
-        return (true);
+        return "redeeming SHARD from SPLIT Treasury";
+
     }
     function checkAllTokens()internal view returns(bool){
         for(uint count=0;count<=totalSupply-1;count++){
