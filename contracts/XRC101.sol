@@ -86,6 +86,7 @@ contract XRC101 is ERC1155, XRC101_Interface {
     //Redeem Dividends from treasury
     function Redeem()public TokenHolder returns(bool){
         //Call Original shard contract
+        SHARD.Redeem();
         address payable RedeemAddress = payable(msg.sender);
         uint total=0;
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
@@ -96,9 +97,6 @@ contract XRC101 is ERC1155, XRC101_Interface {
         }    
         RedeemAddress.call{value: total}("");     
         return true;     
-    }
-    function redeemPush() public returns(bool){
-        return SHARD.Redeem();
     }
     function RedeemShard()public TokenHolder returns(string memory){
         require(SHARD.balanceOf(address(this),shardToken) == 1, "contract not activated");
