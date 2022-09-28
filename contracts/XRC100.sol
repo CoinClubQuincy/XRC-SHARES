@@ -7,20 +7,28 @@ interface XRC100_Interface {
     function Redeem()external returns(bool);             
 }
 
-
+/// @title SHARD Dividend Yeilding Token
+/// @author Quincy Jones (https://github.com/CoinClubQuincy)
+/// @dev a NFT that represents pices of a DApp
+///  SHARD holders are able to redeem dividends from the acociated SHARD token account within the cntract
 contract XRC100 is ERC1155, XRC100_Interface {
     string public name;
     string public symbol;
     uint public totalSupply;
+    //generations are counted in XRC101 contracts to represent
+    // what the dilution of the token may be
     uint public generation = 0;
-    //mappings map Account amounts and micro ledger
+    // Each SHARD has an account within the contract
+    // each account stores all the alocated funds to the appropriate token
     mapping (uint => Tokens) public accounts;
-    //Account Details
+    // About Tokens struct
+    // Account Details of SHARD token
+    // Each account can be redeemd by its coresponding token
     struct Tokens{
         uint amount;
         bool exist;
     }
-    //launch Contract
+    
     constructor(string memory _name,string memory _symbol,uint _totalSupply) ERC1155("{name:SHARD, token:{id}}") {
         name = _name;
         symbol = _symbol;
@@ -37,6 +45,9 @@ contract XRC100 is ERC1155, XRC100_Interface {
         require(checkTokens()== true, "only token holders can access");
         _;
     }
+
+    /// @notice checks to see if holder holds any SHARDS
+    /// @return status of wheather the holder possess the token
     function checkTokens()internal view returns(bool){
         uint token;
         for(token=0;token <= totalSupply-1;token++){
@@ -46,7 +57,7 @@ contract XRC100 is ERC1155, XRC100_Interface {
         }
         return false;
     }
-    //Accept payment from CoinBank and issue dividends to accounts
+
     function callFromFallback(uint _singleShard)internal{
         uint CurrentCount=0;
         for(CurrentCount;CurrentCount<=totalSupply-1;CurrentCount++){
