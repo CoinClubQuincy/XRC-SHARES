@@ -44,7 +44,7 @@ GitHub: [https://github.com/CoinClubQuincy/XRC-SHARDS](https://github.com/CoinCl
 
  All function within contract can use this line of code at the bottom of their function to forward funds to the **receive()** function to allocate funds.
 ````solidity
-    address(this).call{value: msg.value};
+address(this).call{value: msg.value}; //this will forward all funds to the receive() function
 ````
 This contract bellow is an example of a lemonade stand contract that receives 100XDC for a glass of lemonade and divides those funds amongst 10 token holders
 
@@ -56,7 +56,6 @@ contract lemonadeStand is XRC100{
 	    require(msg.value ==  100000000000000000000,"need more funds");
 
 	    //this call can be used in all functions that recive fees
-	    //this will forward all funds to the receive() function
 	    address(this).call{value:  msg.value};  
 	    return  true;
 	}
