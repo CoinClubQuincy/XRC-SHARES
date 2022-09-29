@@ -28,7 +28,7 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
     }
     //launch Contract
     constructor(address payable _shardContract)ERC1155("{name:SPLIT, token:{id}}") { 
-        SHARD = XRC100(payable(_shardContract));
+        SHARD = XRCSHARD(payable(_shardContract));
 
         name= SHARD.name();
         symbol= SHARD.symbol();
