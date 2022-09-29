@@ -17,7 +17,7 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
 
     uint[] tokenList;
     uint[] tokenCount;
-    XRC100 public SHARD;
+    XRCSHARD public SHARD;
     bool public activated;
     //mappings map Account amounts and micro ledger
     mapping (uint => Tokens) public accounts;
