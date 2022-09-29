@@ -1,14 +1,14 @@
 pragma solidity ^0.8.10;
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "./XRC100.sol";
+import "./SHARD.sol";
 
-interface XRC101_Interface {
+interface XRCSPLIT_Interface {
     function View_Account(uint _token) external view returns(uint,uint,uint);
     function Redeem()external returns(bool);  
     function RedeemShard()external returns(string memory);
 }
-contract XRC101 is ERC1155, XRC101_Interface {
+contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
     string public name;
     string public symbol;
     uint public totalSupply;

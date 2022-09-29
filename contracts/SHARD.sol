@@ -2,7 +2,7 @@ pragma solidity ^0.8.10;
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-interface XRC100_Interface {
+interface XRCSHARD_Interface {
     function View_Account(uint _token) external view returns(uint);
     function Redeem()external returns(bool);             
 }
@@ -11,7 +11,7 @@ interface XRC100_Interface {
 /// @author Quincy Jones (https://github.com/CoinClubQuincy)
 /// @dev a NFT that represents pices of a DApp
 ///  SHARD holders are able to redeem dividends from the acociated SHARD token account within the cntract
-contract XRC100 is ERC1155, XRC100_Interface {
+contract XRCSHARD is ERC1155, XRCSHARD_Interface {
     string public name;
     string public symbol;
     uint public totalSupply;

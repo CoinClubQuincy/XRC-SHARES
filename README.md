@@ -45,11 +45,11 @@ address(this).call{value: msg.value}; //this will forward all funds to the recei
 This contract bellow is an example of a lemonade stand contract that receives 100XDC for a glass of lemonade and divides those funds amongst 10 token holders
 
 ````solidity
-contract lemonadeStand is XRC100{
+contract lemonadeStand is SHARD{
 	constructor(string  memory _name,string  memory _symbol,uint _totalSupply) XRC100(_name,_symbol,_totalSupply){}
 
 	function GlassOfLemonade()  public  payable  returns(bool){
-	    require(msg.value ==  100000000000000000000,"need more funds");
+	    require(msg.value >=  100000000000000000000,"need more funds");
 
 	    //this call can be used in all functions that recive fees
 	    address(this).call{value:  msg.value};  
@@ -101,6 +101,7 @@ SHARDs are built to be DApps, the standard for XDC applications to allow DApps t
 
   
 
+<<<<<<< Updated upstream
 The XRC-SHARD & XRC-SPLITS contracts have been submitted to be approved as an official standard on the XDC Network. To comment on the process or the contracts, check out the [XDC-Community](https://github.com/XDC-Community/XIPs.github.io) Github to participate in the XDC XIP process.
 
 
@@ -109,3 +110,7 @@ The XRC-SHARD & XRC-SPLITS contracts have been submitted to be approved as an of
 
 
   
+=======
+Currently the XRC-SHARD & XRC-SPLITS contracts are being submitted to be an official standard on the XDC network to comment on the process or the contracts check out the [XDC-Community](https://github.com/XDC-Community/XDC-Community.github.io) Github to participate in the XDC XIP process.
+
+>>>>>>> Stashed changes
