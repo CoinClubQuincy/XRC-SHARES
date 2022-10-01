@@ -4,9 +4,10 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "./SHARD.sol";
 
 interface XRCSPLIT_Interface {
-    function View_Account(uint _token) external view returns(uint,uint,uint);
+    function viewAccount(uint _token) external view returns(uint,uint,uint);
     function Redeem()external returns(bool);  
-    function RedeemShard()external returns(string memory);
+    function redeemShard()external returns(string memory);
+    function viewAccountTotal() external view returns(uint,uint,uint);
 }
 contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
     string public name;
@@ -78,15 +79,28 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         return true;
     }
     //Account of your funds in contract
-    function View_Account(uint _token) public view returns(uint,uint,uint){
+    function viewAccount(uint _token) public view returns(uint,uint,uint){
         require(_token<=totalSupply-1,"incorrect token number");
-        uint total = accounts[_token].amount + (SHARD.View_Account(shardToken)/totalSupply);
-        return (accounts[_token].amount,SHARD.View_Account(shardToken)/totalSupply,total);
+        uint total = accounts[_token].amount + (SHARD.viewAccount(shardToken)/totalSupply);
+        return (accounts[_token].amount,SHARD.viewAccount(shardToken)/totalSupply,total);
     }
+    // view total of all token yeild in account 
+    function viewAccountTotal() public view returns(uint,uint,uint){
+        uint total =0;
+        uint totalFromSource=0;
+        for(uint count =0;count<=totalSupply-1;count++){
+            if(balanceOf(msg.sender,count)== 1){
+                total += accounts[count].amount;
+                totalFromSource += (SHARD.viewAccount(shardToken)/totalSupply);
+            }
+        }
+        return (total,totalFromSource,total+totalFromSource);
+    }
+
     //Redeem Dividends from treasury
     function Redeem()public TokenHolder returns(bool){
         //Call Original shard contract
-        SHARD.Redeem();
+        SHARD.redeem();
         address payable RedeemAddress = payable(msg.sender);
         uint total=0;
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
@@ -98,7 +112,7 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         RedeemAddress.call{value: total}("");     
         return true;     
     }
-    function RedeemShard()public TokenHolder returns(string memory){
+    function redeemShard()public TokenHolder returns(string memory){
         require(SHARD.balanceOf(address(this),shardToken) == 1, "contract not activated");
         require(checkAllTokens() == true,"you must hold all splits");
 
