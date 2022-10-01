@@ -3,8 +3,9 @@ pragma solidity ^0.8.10;
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 interface XRCSHARD_Interface {
-    function View_Account(uint _token) external view returns(uint);
-    function Redeem()external returns(bool);             
+    function viewAccount(uint _token) external view returns(uint);
+    function redeem()external returns(bool); 
+    function viewAccountTotal() external view returns(uint);            
 }
 
 /// @title SHARD Dividend Yeilding Token
@@ -67,22 +68,22 @@ contract XRCSHARD is ERC1155, XRCSHARD_Interface {
         }
     }
     //Account of your funds in contract
-    function View_Account(uint _token) public view returns(uint){
+    function viewAccount(uint _token) public view returns(uint){
         require(_token<=totalSupply-1,"incorrect token number");
         return accounts[_token].amount;
     }
-    function View_Total() public view returns(uint){
+    function viewAccountTotal() public view returns(uint){
         uint total=0;
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
             if(balanceOf(msg.sender,tokens) == 1){
-                total += View_Account(tokens);
+                total += viewAccount(tokens);
             }
         }       
         return total;
     }
-    //Redeem Dividends from treasury
-    function Redeem()public TokenHolder returns(bool){
-        address payable RedeemAddress = payable(msg.sender);
+    //redeem Dividends from treasury
+    function redeem()public TokenHolder returns(bool){
+        address payable redeemAddress = payable(msg.sender);
         uint total=0;
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
             if(balanceOf(msg.sender,tokens) == 1){
@@ -90,7 +91,7 @@ contract XRCSHARD is ERC1155, XRCSHARD_Interface {
                 accounts[tokens].amount = 0;
             }
         }    
-        RedeemAddress.call{value: total}("");    
+        redeemAddress.call{value: total}("");    
         return true;     
     }
     //Payments made to the contract
