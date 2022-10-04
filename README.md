@@ -1,5 +1,4 @@
-
-
+![Profile View Counter](https://komarev.com/ghpvc/?username=CoinClubQuincy)
 ## A New Type of Token: SHARDS & SPLITS
 
   
