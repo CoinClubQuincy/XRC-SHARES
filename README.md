@@ -1,115 +1,117 @@
-![Profile View Counter](https://komarev.com/ghpvc/?username=CoinClubQuincy)
-## A New Type of Token: SHARDS & SPLITS
+# **Tokenizing DApps: SHARES & SPLITS**
 
   
 
-Most are familiar with NFTs as decentralized Objects that show ownership of an item or keep a unit of account of an Item. NFTs can be a representative of anything, even a DApp. Today I made a proposal to the XDC-Community [XIP Proposal](https://github.com/XDC-Community/XIPs.github.io) to standardize a new type of token — the SHARD. A SHARD is an NFT that represents ownership over a DApp and will take the incoming funds and distribute them among the token holders. Developers can also use these NFTs within their application to give the SHARDS governance capabilities, like access control and voting rights, by defining the tokens in the code itself.
+Most people are familiar with NFTs as decentralized objects that show ownership of an item or keep a unit of account. An NFT can represent literally anything, even a decentralized application (DApp).
 
   
 
-There are 2 types of SHARDS — SHARDS and SPLITS. A SHARD acts as a share of a DApp that receives the dividends based on its performance while a SPLIT is a Share of a SHARD and receives the yield of the original SHARD while splitting the dividends again amongst a set of derivative token holders.
+I recently made a proposal to the XDC Community ([XIP Proposal](https://github.com/XDC-Community/XIPs.github.io)) to standardize a new type of token — the SHARE. A SHARE is an NFT that represents ownership over a DApp and will take the incoming funds and distribute them among the token holders. Developers can also use these NFTs within their application to give the SHARES governance capabilities, such as access control and voting rights, by defining the tokens in the code itself.
 
   
 
-SHARDs are not a crypto currency but a native crypto asset to a native crypto application. The Performance and relative value of the SHARD is predicated on the growth and use of the DApp and the accumulated fees that act as a yield for the Token holders.
+There are 2 types of SHARES — SHARES and SPLITS. A SHARE acts as a share of a DApp that receives the dividends based on its performance while a SPLIT is a share of a SHARE, receiving the yield of the original SHARE while splitting the dividends again amongst a set of derivative token holders.
 
   
 
-SHARDS Attributes:
+SHARES are not a crypto currency but a native crypto asset to a crypto application. The performance and relative value of the SHARE is predicated on the growth and use of the DApp and the accumulated fees that are dispersed among the token holders.
 
--   A DApp can have a max of 1000 SHARDS.
+  
+
+**_SHARES Attributes:_**
+
+-   A DApp can have a max of 1,000 SHARES.
     
--   Each SHARD has its own account in the contract, and the holder of the token can redeem any yield from that token’s account.
-    
-
-  
-
-SPLIT Attributes:
-
--   SPLITS have the same amount of splits per SHARD as the SHARD has shards.
-    
--   A SPLIT is a uniform contract and doesn't have any additional functions. A SPLIT of the same generation maintains equal value even if it comes from a different SHARD in the same SHARDS contract.
+-   Each SHARE has its own account in the contract, and the holder of the SHARE can redeem any yield from that token’s account.
     
 
   
 
-Example of a DApp with SHARDS:
+_**SPLIT Attributes:**_
 
-![](https://lh3.googleusercontent.com/jSqdOe-TX-_rW14iQGtvVtMnFcqSH2gLu6tpGR4nkkoJ6P1ERWKneu8PtbK6Hhf3Y_XUTajZO49KJGA4NsOCjleVtgOJz5Dm1gqoTqCCbkdN_q1ppW0_0qxwa0FUsP1wzQ6c_VcRwPHVcosH0e2wrCTvWZ8K5sodMtkhn-vtpNmLZRt2HD59B41dWg)
+-   SPLITS have the same amount of splits per SHARE as the SHARE has total SHARES.
+    
+-   A SPLIT is a uniform contract and doesn't have any additional functions but redeem value from the deriving SHARE.
+    
+-   A SPLIT of the same generation maintains equal value even if it comes from a different SHARE in the same SHARES contract.
+    
 
- All function within contract can use this line of code at the bottom of their function to forward funds to the **receive()** function to allocate funds.
-````solidity
-address(this).call{value: msg.value}; //this will forward all funds to the receive() function
-````
-This contract bellow is an example of a lemonade stand contract that receives 100XDC for a glass of lemonade and divides those funds amongst 10 token holders
+  
 
-````solidity
-contract lemonadeStand is SHARD{
-	constructor(string  memory _name,string  memory _symbol,uint _totalSupply) XRC100(_name,_symbol,_totalSupply){}
+**Example of a DApp with SHARES:**
 
-	function GlassOfLemonade()  public  payable  returns(bool){
-	    require(msg.value >=  100000000000000000000,"need more funds");
+![](https://lh5.googleusercontent.com/VGAhLfodKDyz8KcP-dNBAU9gWEjBnsewnF3C2ZlpdO2TuJ6rzV6iAy95PXsZEvDi_G3rFs8bM2byNLrnJaGO9fDNxVbs2_FWHZLn1_OUf3HuAFLu1an4qOd-EVgnWL0eYMGrDBR67mNN0ApIlfRWXSgIa7U9tp3p8FGvq7Z_co6T2uCUk8EN48HUoQ)
 
-	    //this call can be used in all functions that recive fees
-	    address(this).call{value:  msg.value};  
-	    return  true;
-	}
+  
+
+GitHub: [https://github.com/CoinClubQuincy/XRC-SHARES](https://github.com/CoinClubQuincy/XRC-SHARDS)
+
+  All function within contract can use this line of code at the bottom of their function to forward funds to the receiving function to allocate funds.
+```solidity
+redirectValue(msg.value); //this will forward all funds to share token treasury
+```
+This contract bellow is an example of a lemonade stand contract that receives 10XDC for a glass of lemonade and divides those funds amongst a set token holders while keeping track of how many glasses have been sold.
+
+```solidity
+contract lemonadeStand is XRCSHARE{
+    uint public lemonadeCount =0;
+    constructor(string  memory _name,string  memory _symbol,uint _totalSupply) XRCSHARE(_name,_symbol,_totalSupply){}
+    
+    function GlassOfLemonade()  public  payable  returns(bool){
+        require(msg.value >=  10000000000000000000,"need more funds");
+        lemonadeCount++;
+        //this call can be used in all functions that recive fees
+        redirectValue(msg.value);
+        return  true;
+    }
 }
-````
+``` 
 
-SHARDS (XRC100) & SPLITS (XRC101) allow Developers to sell portions of their DApps by allowing a simple means of retrieving profitable applications that reside on the XDC Network while investors can invest in the DApp, helping to grow its user base while being attributed dividends. The value of the Tokens are based on the performance of the DApp. Any DApp, no matter how big or small, can have SHARDS to allocate profits and sell stake in the DApp.
-
-  
-
-SPLITS are a uniform contract to split SHARD tokens into smaller dividend tokens that redeem and split the dividends allocated to that associated Token provided to the SPLIT contract. A SPLIT is functionally identical to a SHARD except a SPLIT can only represent split ownership of a SHARD, whereas a SHARD represents equitable ownership in the DApp. If a DApp uses the SHARD tokens as governance tokens or in some form of automation, SPLITS cannot participate. SPLITS only redeem dividends from the SHARD that's been split.
+**SHARES & SPLITS** allow developers to sell portions of their DApps by allowing a simple means of owning and distributing equity of profitable applications that reside on the XDC Network. This means an investor can invest in the DApp, to help the developer build more features or to help grow its user and community base while being attributed dividends. The value of the tokens are based on the performance of the DApp. Any DApp, no matter how big or small, can have SHARES to allocate profits.
 
   
 
-SPLITS can be broken up into generations (as referenced in the example above). The original SHARD stands as Generation 0 while the first SPLIT is generation 1. Each generation's SPLIT is equal in value to all SPLITS in that same generation.
+SPLITS are uniform contracts to split SHARE tokens into smaller dividend tokens that redeem and split the dividends allocated to that associated token provided to the SPLIT contract. A SPLIT is functionally identical to a SHARE, but a SPLIT can only represent partial ownership of a SHARE, whereas a SHARE represents ownership of the DApp. If a DApp uses the SHARE tokens as governance tokens or in some form of automation, SPLITS cannot participate. SPLITS only redeem dividends from the SHARE that's been split.
 
   
 
-SPLIT generations allow for SHARDS to be divided up indefinitely. If a DApp has 1000 SHARDs, each SHARD’s SPLIT must have the same number of SPLITS as the total SHARDS. So each SHARD will be split 1000 times. The first generation of SPLITS will have a maximum of 1M SPLITS and 1000 SPLITS per SHARD.A second generation SPLIT will have a max of 1B SPLITS and1000 SPLITS per generation 1 SPLIT, and a Trillion SPLITS for generation 3.
-
-### How DApps Can Use SHARDS
-
-DApps can use SHARDS in a few different ways:
+We refer to these layers of SPLITS as generations, as shown in the graphic above. The original SHARE stands as generation 0, the next is generation 1, and so forth. All SPLITS in a given generation hold equal value.
 
   
 
--   DApps can be built with SHARDS to allow for dividend allocation in these DApps.
+These generations allow for SHARES to be divided up indefinitely. SPLITS can only have as many splits as the SHARE contract has SHARES. That means that if there are 1,000 SHARES, each of those SHARES can have only 1,000 SPLITS in the first generation. In the second generation, each of these 1,000 first generation SPLITS can have 1,000 second generation SPLITS.
+
+  
+
+Meaning that in generation one, all the SHARES can have a total of 1 million SPLITS derived from them, and in the second generation can have 1 Billion SPLITS derived from its first generation SPLITS . Simply put, dividend-earning stakeholding of a DApp can increase liquidity in each generation, as these SPLITS also increase affordability to investors who want to own the yield of a DApp,as a derivative token of the original SHARE.
+
+### How DApps Can Use SHARES
+
+DApps can use SHARES in a few different ways:
+
+  
+
+-   DApps can be built with SHARES to allow for dividend allocation of the revenue in these DApps
     
--   Developers can also build more smart contracts after the fact, which can offer more functionality and consolidate the profits from the new DApps into the original SHARD contract.
+-   Developers can also build more smart contracts after the fact, which can offer more functionality and consolidate the profits from the new DApps into the original SHARE contract
     
--   Third party developers can also do this to add functionality and increase the Yield for the SHARDS by creating new functions.
+-   Third-party developers can also do this to add functionality and increase the yield for the SHARES
     
--   Developers can also create abstract single function contracts [ex: polling DApp, analysis DApp, TAx DApp] called DApplets — isolated DApps that aren't typically user facing and may allow functionality to other smart contracts that can hold SHARDS and justify profitability from otherwise abstract functions.
+-   Developers can also create abstract single function contracts (ex: polling DApp, analysis DApp, TAx DApp) called DApplets — isolated DApps that aren't typically user facing and may allow functionality to other smart contracts that can hold SHARES and justify profitability from otherwise abstract functions
     
--   SHARDS are a direct means of having developers sell portions of their products no matter how big or small to help fund their future products
+-   SHARES are a direct means of having developers sell portions of their products no matter how big or small to help fund their future products
     
--   inventors can own DApps similar to how they own companies
+-   Investors can own DApps similar to how they own companies
     
 
   
 
-Currently, crypto currencies are the primary market on blockchain. However, as more DApps have various means of ownership over the DApp, new markets will arise that are centered around the popularity and growth of DApps on the network. As DApps incestuously interconnect with each secondary DApp that relies on Dependency functions from the primary DApp, the secondary DApps become popular and profitable as do the primary DApps. The SHARD holders of both are able to gain fees on the usage of their contract.
+Currently, crypto currencies are the primary market on blockchain. However, as DApps develop novel means of ownership, new markets will arise that are centered around the popularity and growth of DApps. As primary DApps interconnect with secondary applications that rely on them, both the secondary and primary DApps may become profitable. The SHARE holders of both are able to gain fees on the usage of their contract.
 
   
 
-SHARDs are built to be DApps, the standard for XDC applications to allow DApps to distribute incoming funds amongst a set of token holders who hold them as ownership of the DApp and its dividends. This allows Developers, investors, and DApp users to easily sell and invest in DApps of all sizes getting user growth, similar to how companies operate in traditional economies. The only difference is that the DApp is autonomous, the dividends are autonomous, and anyone can own a piece of any DApp.
+SHARES and SPLITs allow developers, investors, and DApp users to easily sell and invest in DApps of all sizes in a more autonomous way than was possible before. This model exemplifies the promise of blockchain.
 
   
 
-<<<<<<< Updated upstream
-The XRC-SHARD & XRC-SPLITS contracts have been submitted to be approved as an official standard on the XDC Network. To comment on the process or the contracts, check out the [XDC-Community](https://github.com/XDC-Community/XIPs.github.io) Github to participate in the XDC XIP process.
-
-
-## Security Considerations
-**WARNING: Lost SHARDS will result in the portion of funds allocated to the token to also be lost**
-
-
-  
-=======
-Currently the XRC-SHARD & XRC-SPLITS contracts are being submitted to be an official standard on the XDC network to comment on the process or the contracts check out the [XDC-Community](https://github.com/XDC-Community/XDC-Community.github.io) Github to participate in the XDC XIP process.
-
->>>>>>> Stashed changes
+The XRC-SHARE & XRC-SPLITS contracts have been submitted to be approved as an official standard on the XDC Network. To comment on the process or the contracts, check out the [XDC-Community](https://github.com/XDC-Community/XIPs.github.io) Github to participate in the XDC XIP process.
