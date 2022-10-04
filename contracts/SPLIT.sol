@@ -1,7 +1,7 @@
 pragma solidity ^0.8.10;
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "./SHARD.sol";
+import "./SHARE.sol";
 
 interface XRCSPLIT_Interface {
     function viewAccount(uint _token) external view returns(uint,uint,uint);
@@ -13,12 +13,12 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
     string public name;
     string public symbol;
     uint public totalSupply;
-    uint public shardToken;
+    uint public shareToken;
     uint public generation;
 
     uint[] tokenList;
     uint[] tokenCount;
-    XRCSHARD public SHARD;
+    XRCSHARE public SHARE;
     bool public activated;
     //mappings map Account amounts and micro ledger
     mapping (uint => Tokens) public accounts;
@@ -28,13 +28,13 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         bool exist;
     }
     //launch Contract
-    constructor(address payable _shardContract)ERC1155("{name:SPLIT, token:{id}}") { 
-        SHARD = XRCSHARD(payable(_shardContract));
+    constructor(address payable _shareContract)ERC1155("{name:SPLIT, token:{id}}") { 
+        SHARE = XRCSHARE(payable(_shareContract));
 
-        name= SHARD.name();
-        symbol= SHARD.symbol();
-        totalSupply = SHARD.totalSupply();
-        generation = SHARD.generation()+1;
+        name= SHARE.name();
+        symbol= SHARE.symbol();
+        totalSupply = SHARE.totalSupply();
+        generation = SHARE.generation()+1;
         
         for(uint count=0;count<=totalSupply-1;count++){
             tokenList.push(count);
@@ -63,13 +63,13 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
             accounts[CurrentCount].amount +=  _singleShard;
         }
     }
-    function activateContract(uint _shard) public returns(bool){
-        require(SHARD.balanceOf(msg.sender,_shard) == 1, "you must hold shard token");
-        require(SHARD.isApprovedForAll(msg.sender,address(this))==true,"isApprovedForAll on SHARD contract is false must equal true");
+    function activateContract(uint _share) public returns(bool){
+        require(SHARE.balanceOf(msg.sender,_share) == 1, "you must hold share token");
+        require(SHARE.isApprovedForAll(msg.sender,address(this))==true,"isApprovedForAll on SHARE contract is false must equal true");
         require(activated == false, " contract already activated");
 
-        shardToken = _shard;
-        SHARD.safeTransferFrom(msg.sender, address(this), _shard,1,"");
+        shareToken = _share;
+        SHARE.safeTransferFrom(msg.sender, address(this), _share,1,"");
         
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
             accounts[tokens] = Tokens(0,true);
@@ -81,8 +81,8 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
     //Account of your funds in contract
     function viewAccount(uint _token) public view returns(uint,uint,uint){
         require(_token<=totalSupply-1,"incorrect token number");
-        uint total = accounts[_token].amount + (SHARD.viewAccount(shardToken)/totalSupply);
-        return (accounts[_token].amount,SHARD.viewAccount(shardToken)/totalSupply,total);
+        uint total = accounts[_token].amount + (SHARE.viewAccount(shareToken)/totalSupply);
+        return (accounts[_token].amount,SHARE.viewAccount(shareToken)/totalSupply,total);
     }
     // view total of all token yeild in account 
     function viewAccountTotal() public view returns(uint,uint,uint){
@@ -91,7 +91,7 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         for(uint count =0;count<=totalSupply-1;count++){
             if(balanceOf(msg.sender,count)== 1){
                 total += accounts[count].amount;
-                totalFromSource += (SHARD.viewAccount(shardToken)/totalSupply);
+                totalFromSource += (SHARE.viewAccount(shareToken)/totalSupply);
             }
         }
         return (total,totalFromSource,total+totalFromSource);
@@ -99,8 +99,8 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
 
     //Redeem Dividends from treasury
     function Redeem()public TokenHolder returns(bool){
-        //Call Original shard contract
-        SHARD.redeem();
+        //Call Original share contract
+        SHARE.redeem();
         address payable RedeemAddress = payable(msg.sender);
         uint total=0;
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
@@ -113,13 +113,13 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         return true;     
     }
     function redeemShard()public TokenHolder returns(string memory){
-        require(SHARD.balanceOf(address(this),shardToken) == 1, "contract not activated");
+        require(SHARE.balanceOf(address(this),shareToken) == 1, "contract not activated");
         require(checkAllTokens() == true,"you must hold all splits");
 
         _burnBatch(msg.sender, tokenList,tokenCount);
-        SHARD.safeTransferFrom(address(this),msg.sender,shardToken, 1, "");
+        SHARE.safeTransferFrom(address(this),msg.sender,shareToken, 1, "");
         activated = false;
-        return "redeeming SHARD from SPLIT Treasury";
+        return "redeeming SHARE from SPLIT Treasury";
 
     }
     function checkAllTokens()internal view returns(bool){

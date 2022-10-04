@@ -2,17 +2,17 @@ pragma solidity ^0.8.10;
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-interface XRCSHARD_Interface {
+interface XRCSHARE_Interface {
     function viewAccount(uint _token) external view returns(uint);
     function redeem()external returns(bool); 
     function viewAccountTotal() external view returns(uint);            
 }
 
-/// @title SHARD Dividend Yeilding Token
+/// @title SHARE Dividend Yeilding Token
 /// @author Quincy Jones (https://github.com/CoinClubQuincy)
 /// @dev a NFT that represents pices of a DApp
-///  SHARD holders are able to redeem dividends from the acociated SHARD token account within the cntract
-contract XRCSHARD is ERC1155, XRCSHARD_Interface {
+///  SHARE holders are able to redeem dividends from the acociated SHARE token account within the cntract
+contract XRCSHARE is ERC1155, XRCSHARE_Interface {
     string public name;
     string public symbol;
     uint public totalSupply;
@@ -21,18 +21,18 @@ contract XRCSHARD is ERC1155, XRCSHARD_Interface {
     // what the dilution of the token may be
     uint public generation = 0;
     
-    // Each SHARD has an account within the contract
+    // Each SHARE has an account within the contract
     // each account stores all the alocated funds to the appropriate token
     mapping (uint => Tokens) public accounts;
-    // About Tokens struct
-    // Account Details of SHARD token
+    // About Tokens 
+    // Account Details of SHARE token
     // Each account can be redeemd by its coresponding token
     struct Tokens{
         uint amount;
         bool exist;
     }
     
-    constructor(string memory _name,string memory _symbol,uint _totalSupply) ERC1155("{name:SHARD, token:{id}}") {
+    constructor(string memory _name,string memory _symbol,uint _totalSupply) ERC1155("{name:SHARE, token:{id}}") {
         name = _name;
         symbol = _symbol;
         totalSupply = _totalSupply;
@@ -49,7 +49,7 @@ contract XRCSHARD is ERC1155, XRCSHARD_Interface {
         _;
     }
 
-    /// @notice checks to see if holder holds any SHARDS
+    /// @notice checks to see if holder holds any SHARES
     /// @return status of wheather the holder possess the token
     function checkTokens()internal view returns(bool){
         uint token;
@@ -61,10 +61,10 @@ contract XRCSHARD is ERC1155, XRCSHARD_Interface {
         return false;
     }
 
-    function callFromFallback(uint _singleShard)internal{
+    function callFromFallback(uint _singleshare)internal{
         uint CurrentCount=0;
         for(CurrentCount;CurrentCount<=totalSupply-1;CurrentCount++){
-            accounts[CurrentCount].amount +=  _singleShard;
+            accounts[CurrentCount].amount +=  _singleshare;
         }
     }
     //Account of your funds in contract
@@ -94,9 +94,15 @@ contract XRCSHARD is ERC1155, XRCSHARD_Interface {
         redeemAddress.call{value: total}("");    
         return true;     
     }
+    //developers can use this function in thier contracts
+    // to redirect funds from a function to the share holders
+    function redirectValue(uint _msgValue) internal returns(bool){
+        uint single_share = _msgValue/totalSupply;
+        callFromFallback(single_share); 
+    }
     //Payments made to the contract
     receive() external payable {
-        uint single_Shard = msg.value/totalSupply;
-        callFromFallback(single_Shard); 
+        uint single_share = msg.value/totalSupply;
+        callFromFallback(single_share); 
     }
 }
