@@ -32,7 +32,7 @@ contract XRCSHARE is ERC1155, XRCSHARE_Interface {
         bool exist;
     }
     
-    constructor(string memory _name,string memory _symbol,uint _totalSupply) ERC1155("{name:SHARE, token:{id}}") {
+    constructor(string memory _name,string memory _symbol,uint _totalSupply,string memory URI) ERC1155(URI) {
         name = _name;
         symbol = _symbol;
         totalSupply = _totalSupply;

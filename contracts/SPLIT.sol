@@ -28,7 +28,7 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         bool exist;
     }
     //launch Contract
-    constructor(address payable _shareContract)ERC1155("{name:SPLIT, token:{id}}") { 
+    constructor(address payable _shareContract,string memory URI)ERC1155(URI) { 
         SHARE = XRCSHARE(payable(_shareContract));
 
         name= SHARE.name();
