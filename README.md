@@ -1,4 +1,4 @@
-# **Tokenizing DApps: SHARES & SPLITS**
+# **Tokenizing DApps & Contracts: SHARES & SPLITS**
 
   
 
