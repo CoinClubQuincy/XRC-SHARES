@@ -1,7 +1,5 @@
 # **Tokenizing DApps & Contracts: SHARES & SPLITS**
-
   
-
 Most people are familiar with NFTs as decentralized objects that show ownership of an item or keep a unit of account. An NFT can represent literally anything, even a decentralized application (DApp).
 
   
@@ -115,3 +113,7 @@ SHARES and SPLITs allow developers, investors, and DApp users to easily sell and
   
 
 The XRC-SHARE & XRC-SPLITS contracts have been submitted to be approved as an official standard on the XDC Network. To comment on the process or the contracts, check out the [XDC-Community](https://github.com/XDC-Community/XIPs.github.io) Github to participate in the XDC XIP process.
+
+
+
+## !!For SPLIT contracts, isApprovedForAll() must equal true on the original SHARE contract to enable the contract to recive the SHARE token upon activation!!
