@@ -99,6 +99,7 @@ contract XRCSHARE is ERC1155, XRCSHARE_Interface {
     function redirectValue(uint _msgValue) internal returns(bool){
         uint single_share = _msgValue/totalSupply;
         callFromFallback(single_share); 
+        return true;
     }
     //Payments made to the contract
     receive() external payable {
