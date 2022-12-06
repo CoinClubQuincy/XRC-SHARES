@@ -67,15 +67,14 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         require(SHARE.balanceOf(msg.sender,_share) == 1, "you must hold share token");
         require(SHARE.isApprovedForAll(msg.sender,address(this))==true,"isApprovedForAll on SHARE contract is false must equal true");
         require(activated == false, " contract already activated");
-
-        shareToken = _share;
-        SHARE.safeTransferFrom(msg.sender, address(this), _share,1,"");
         
+        shareToken = _share;
+        activated = true;
+        SHARE.safeTransferFrom(msg.sender, address(this), _share,1,"");
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
             accounts[tokens] = Tokens(0,true);
             _mint(msg.sender,tokens, 1, "");
         }
-        activated = true;
         return true;
     }
     //Account of your funds in contract
