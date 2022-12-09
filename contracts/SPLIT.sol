@@ -5,7 +5,7 @@ import "./SHARE.sol";
 
 interface XRCSPLIT_Interface {
     function viewAccount(uint _token) external view returns(uint,uint,uint);
-    function Redeem()external returns(bool);  
+    function redeem()external returns(bool);  
     function redeemShard()external returns(string memory);
     function viewAccountTotal() external view returns(uint,uint,uint);
 }
@@ -97,7 +97,7 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
     }
 
     //Redeem Dividends from treasury
-    function Redeem()public TokenHolder returns(bool){
+    function redeem()public TokenHolder returns(bool){
         //Call Original share contract
         SHARE.redeem();
         address payable RedeemAddress = payable(msg.sender);
