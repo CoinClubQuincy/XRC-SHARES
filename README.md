@@ -40,9 +40,6 @@ _**SPLIT Attributes:**_
 
 ![](https://lh5.googleusercontent.com/VGAhLfodKDyz8KcP-dNBAU9gWEjBnsewnF3C2ZlpdO2TuJ6rzV6iAy95PXsZEvDi_G3rFs8bM2byNLrnJaGO9fDNxVbs2_FWHZLn1_OUf3HuAFLu1an4qOd-EVgnWL0eYMGrDBR67mNN0ApIlfRWXSgIa7U9tp3p8FGvq7Z_co6T2uCUk8EN48HUoQ)
 
-  
-
-GitHub: [https://github.com/CoinClubQuincy/XRC-SHARES](https://github.com/CoinClubQuincy/XRC-SHARDS)
 
   All function within contract can use this line of code at the bottom of their function to forward funds to the receiving function to allocate funds.
 ```solidity
