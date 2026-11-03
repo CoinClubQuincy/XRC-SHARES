@@ -20,13 +20,13 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
     uint[] tokenCount;
     XRCSHARE public SHARE;
     bool public activated;
-    //mappings map Account amounts and micro ledger
-    mapping (uint => Tokens) public accounts;
-    //Account Details
-    struct Tokens{
-        uint amount;
-        bool exist;
-    }
+    // Each split earns the same amount, so one running total covers every token.
+    uint public perShareAccrued = 0;
+    // The part of past payments too small to divide across all splits yet
+    uint public remainder = 0;
+    // How much of the running total each split has already been paid
+    mapping (uint => uint) private claimed;
+
     //launch Contract
     constructor(address payable _shareContract,string memory URI)ERC1155(URI) { 
         SHARE = XRCSHARE(payable(_shareContract));
@@ -55,13 +55,29 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         }
         return false;
     }
-    //Accept payment from CoinBank and issue dividends to accounts
-    function callFromFallback(uint _singleShard)internal{
-        uint CurrentCount=0;
-        //Fix Gas ploblem
-        for(CurrentCount;CurrentCount<=totalSupply-1;CurrentCount++){
-            accounts[CurrentCount].amount +=  _singleShard;
+    //credits a payment to every split, carrying what doesnt divide evenly into the next one
+    function creditPayment(uint _amount)internal{
+        uint total = _amount + remainder;
+        perShareAccrued += total/totalSupply;
+        remainder = total%totalSupply;
+    }
+    //What the source still owes this contract. A source may be a SHARE, whose viewAccount
+    //returns one value, or another SPLIT, which returns three with the total last.
+    function sourcePending()internal view returns(uint){
+        if(activated == false){
+            return 0;
         }
+        (bool success, bytes memory data) = address(SHARE).staticcall(abi.encodeWithSignature("viewAccount(uint256)",shareToken));
+        require(success, "source account could not be read");
+        if(data.length == 96){
+            (, , uint total) = abi.decode(data,(uint,uint,uint));
+            return total;
+        }
+        return abi.decode(data,(uint));
+    }
+    //What one split would receive if the source were paid out now
+    function sourcePerSplit()internal view returns(uint){
+        return (sourcePending()+remainder)/totalSupply;
     }
     function activateContract(uint _share) public returns(bool){
         require(SHARE.balanceOf(msg.sender,_share) == 1, "you must hold share token");
@@ -71,8 +87,8 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
         shareToken = _share;
         activated = true;
         SHARE.safeTransferFrom(msg.sender, address(this), _share,1,"");
+        //redeemShard already paid everything out, so a new round of splits starts level
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
-            accounts[tokens] = Tokens(0,true);
             _mint(msg.sender,tokens, 1, "");
         }
         return true;
@@ -80,17 +96,26 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
     //Account of your funds in contract
     function viewAccount(uint _token) public view returns(uint,uint,uint){
         require(_token<=totalSupply-1,"incorrect token number");
-        uint total = accounts[_token].amount + (SHARE.viewAccount(shareToken)/totalSupply);
-        return (accounts[_token].amount,SHARE.viewAccount(shareToken)/totalSupply,total);
+        uint own = activated ? perShareAccrued - claimed[_token] : 0;
+        uint fromSource = sourcePerSplit();
+        return (own,fromSource,own+fromSource);
+    }
+    /// @notice the unclaimed funds held here for a split, and whether that split exists
+    function accounts(uint _token) public view returns(uint amount,bool exist){
+        if(activated == false || _token >= totalSupply){
+            return (0,false);
+        }
+        return (perShareAccrued - claimed[_token],true);
     }
     // view total of all token yeild in account 
     function viewAccountTotal() public view returns(uint,uint,uint){
         uint total =0;
         uint totalFromSource=0;
+        uint fromSource = sourcePerSplit();
         for(uint count =0;count<=totalSupply-1;count++){
             if(balanceOf(msg.sender,count)== 1){
-                total += accounts[count].amount;
-                totalFromSource += (SHARE.viewAccount(shareToken)/totalSupply);
+                total += perShareAccrued - claimed[count];
+                totalFromSource += fromSource;
             }
         }
         return (total,totalFromSource,total+totalFromSource);
@@ -98,52 +123,59 @@ contract XRCSPLIT is ERC1155, XRCSPLIT_Interface {
 
     //Redeem Dividends from treasury
     function redeem()public TokenHolder returns(bool){
-        //Call Original share contract
+        //Call Original share contract, which pays into receive below
         SHARE.redeem();
-        address payable RedeemAddress = payable(msg.sender);
         uint total=0;
         for(uint tokens=0;tokens<=totalSupply-1;tokens++){
             if(balanceOf(msg.sender,tokens) == 1){
-                total += accounts[tokens].amount;
-                accounts[tokens].amount = 0;
+                total += perShareAccrued - claimed[tokens];
+                claimed[tokens] = perShareAccrued;
             }
-        }    
-        RedeemAddress.call{value: total}("");     
-        return true;     
+        }
+        pay(total);
+        return true;
     }
+    //Burns all the splits and returns the SHARE. The holder owns every split, so they also
+    //receive everything the splits earned, including what was too small to divide.
     function redeemShard()public TokenHolder returns(string memory){
-        require(SHARE.balanceOf(address(this),shareToken) == 1, "contract not activated");
+        require(activated == true, "contract not activated");
         require(checkAllTokens() == true,"you must hold all splits");
+        SHARE.redeem();
 
+        uint total=remainder;
+        remainder=0;
+        for(uint tokens=0;tokens<=totalSupply-1;tokens++){
+            total += perShareAccrued - claimed[tokens];
+            claimed[tokens] = perShareAccrued;
+        }
         _burnBatch(msg.sender, tokenList,tokenCount);
-        SHARE.safeTransferFrom(address(this),msg.sender,shareToken, 1, "");
         activated = false;
+        SHARE.safeTransferFrom(address(this),msg.sender,shareToken, 1, "");
+        pay(total);
         return "redeeming SHARE from SPLIT Treasury";
-
+    }
+    function pay(uint _amount)internal{
+        if(_amount > 0){
+            (bool success, ) = payable(msg.sender).call{value: _amount}("");
+            require(success, "payment failed");
+        }
     }
     function checkAllTokens()internal view returns(bool){
         for(uint count=0;count<=totalSupply-1;count++){
-            if(balanceOf(msg.sender, count) == 1){  
-                count++;
-            } else{
+            if(balanceOf(msg.sender, count) != 1){
                 return false;
             }
         }
         return true;
     }
-    //ERC1155Received fuctions
-    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
+    //Accepts only the SHARE being taken in by activateContract, so nothing else can get stuck here
+    function onERC1155Received(address, address, uint256 _id, uint256, bytes memory) public virtual returns (bytes4) {
+        require(activated == true && msg.sender == address(SHARE) && _id == shareToken, "use activateContract");
         return this.onERC1155Received.selector;
-    }
-    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
-    }
-    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
-        return this.onERC721Received.selector;
     }
     //Payments made to the contract
     receive() external payable {
-        uint single_Shard = msg.value/totalSupply;
-        callFromFallback(single_Shard); 
+        require(activated == true, "contract not activated");
+        creditPayment(msg.value);
     }
 }

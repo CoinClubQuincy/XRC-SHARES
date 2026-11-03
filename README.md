@@ -14,14 +14,14 @@
 A SHARE is an NFT that represents a piece of a DApp. Money paid to the contract is divided evenly across every share, and each holder withdraws what their shares have earned. A SPLIT divides one SHARE into smaller dividend tokens, and SPLITS can themselves be split.
 
 > [!WARNING]
-> This is a proposal and has not been audited. Read [Known issues](#known-issues) before sending real funds to it.
+> This is a proposal. It has not been audited and has not run on a real network. Read [Known issues](#known-issues) before sending real funds to it.
 
 ## Why use it
 
 | You want to | With SHARES |
 | --- | --- |
 | Sell part of a DApp | Sell share tokens, which are ordinary ERC-1155 tokens |
-| Pay holders automatically | Send fees to the contract and each share account is credited |
+| Pay holders automatically | Send fees to the contract and every share is credited, at the same cost however many shares exist |
 | Let holders use access control or voting | Check `balanceOf` for a share in your own contract |
 | Offer smaller stakes | Put a SHARE into a SPLIT contract and sell the splits |
 
@@ -30,7 +30,7 @@ A SHARE is an NFT that represents a piece of a DApp. Money paid to the contract 
 ```mermaid
 flowchart LR
     U[Customer] -->|pays the DApp| D[Your DApp<br/>extends XRCSHARE]
-    D -->|redirectValue| A[One account per SHARE]
+    D -->|redirectValue| A[Running total per SHARE]
     A -->|redeem| H[SHARE holders]
     A -->|redeem| S[XRCSPLIT<br/>holds one SHARE]
     S -->|redeem| SH[SPLIT holders]
@@ -48,7 +48,7 @@ contract LemonadeStand is XRCSHARE {
     function GlassOfLemonade() public payable returns (bool) {
         require(msg.value >= 10 ether, "need more funds");
         lemonadeCount++;
-        redirectValue(msg.value); // credits every share account
+        redirectValue(msg.value); // credits every share
         return true;
     }
 }
@@ -62,12 +62,14 @@ contract LemonadeStand is XRCSHARE {
 | `XRCSHARE` | `redeem()` | Pays the caller for every share they hold |
 | `XRCSPLIT` | `activateContract(share)` | Takes in one SHARE and mints the splits to the caller |
 | `XRCSPLIT` | `redeem()` | Pulls the SHARE's dividends, then pays the caller's splits |
-| `XRCSPLIT` | `redeemShard()` | Burns all the splits and returns the SHARE |
+| `XRCSPLIT` | `redeemShard()` | Pays out what the splits earned, burns them and returns the SHARE. The caller must hold every split |
 
 > [!IMPORTANT]
 > Before calling `activateContract`, call `setApprovalForAll(splitAddress, true)` on the SHARE contract.
 
-Unclaimed dividends stay with the token. If a share is sold, the new holder can redeem what it has already earned.
+Unclaimed dividends stay with the token. If a share is sold, the new holder can redeem what it has already earned. This includes activating a SPLIT: anything the SHARE has not yet paid out goes to the split holders, so redeem first if you want to keep it.
+
+A SPLIT can hold a SHARE or a split from another SPLIT. Its `viewAccount` returns three values: what the split holds here, what it would receive from its source, and the total.
 
 The full write-up, including generations of SPLITS and how DApps can use them, is in [docs/WRITEUP.md](docs/WRITEUP.md). To comment on the proposal, use the [XDC XIP repository](https://github.com/XDC-Community/XIPs.github.io).
 
@@ -81,7 +83,7 @@ git clone --depth 1 -b v1.9.7 https://github.com/foundry-rs/forge-std lib/forge-
 forge test
 ```
 
-You need [Foundry](https://getfoundry.sh). Tests named `test_KnownIssue_*` pass because they pin a defect, so a passing run does not mean the defect is gone.
+You need [Foundry](https://getfoundry.sh).
 
 To try it on a network, use the Apothem testnet:
 
@@ -97,22 +99,43 @@ forge create contracts/SHARE.sol:XRCSHARE --rpc-url https://rpc.apothem.network 
 
 ## What is tested
 
-[`test/foundry/Share.t.sol`](test/foundry/Share.t.sol) has 10 tests and runs in CI on every push.
+[`test/foundry/Share.t.sol`](test/foundry/Share.t.sol) has 29 tests, including one fuzz test, and runs in CI on every push.
 
 | Tested | Not tested |
 | --- | --- |
 | Minting, the 1,000 share cap and even splitting | A real network, testnet or mainnet |
-| Redeeming only the shares you hold | An independent security audit |
-| Dividends moving with a sold token | `redeemShard()` and more than one generation of SPLITS |
-| A SPLIT paying its holders from the SHARE | |
+| Redeeming only the shares you hold, and dividends moving with a sold token | An independent security audit |
+| Failed payouts reverting and keeping the balance, and a reentrant holder being paid once | Whether the XIP text matches this code |
+| Payment gas not depending on the number of shares | |
+| `redeemShard()`, including every missing-split position and amounts too small to divide | |
+| Activating again without owing anything stale | |
+| A SPLIT of a SPLIT, for viewing, paying and `redeemShard()` | |
+| Fuzz: nobody withdraws more than was paid, and the contracts stay solvent | |
+
+The test `test_GasForAPaymentDoesNotDependOnTheNumberOfShares` measured about 28,000 gas for the first payment to 1,000 shares. The earlier version used about 20.6 million.
+
+## Changes from earlier versions
+
+Contracts already deployed are unaffected and keep the old behaviour. The XIP text and [docs/WRITEUP.md](docs/WRITEUP.md) describe the original proposal and were not changed.
+
+- Payments now update one running total per contract instead of writing to every share. New public values: `perShareAccrued` and `remainder`.
+- `accounts(token)` is now a view with the same return values. `exist` is false for a token that does not exist.
+- What does not divide evenly now carries into the next payment instead of staying uncredited.
+- `redeem()` reverts if the payout fails, so a holder no longer loses their balance.
+- `redeemShard()` pays out what the splits earned before burning them. It also now checks every split. It used to check only every other one.
+- A SPLIT of a SPLIT now reads its source correctly.
+- `viewAccount` on a SPLIT shows nothing before activation. It used to report share 0.
+- A SPLIT refuses payments before activation, refuses any token except the SHARE being activated, and no longer has `onERC721Received` or `onERC1155BatchReceived`.
+- The constructor refuses zero shares, and both limits now have clear revert messages.
 
 ## Known issues
 
 | Issue | Effect | Test |
 | --- | --- | --- |
-| `redeem()` ignores a failed payout | A holder contract that can't receive funds loses its balance, because the account is zeroed first | `test_KnownIssue_RedeemZeroesBalanceWhenThePayoutFails` |
-| Payments use a lot of gas | A sender limited to 2,300 gas, as with Solidity's `transfer`, fails. The first payment to 1,000 shares used about 20.6 million gas in testing | `test_KnownIssue_PaymentWith2300GasFails` |
-| Integer division | Whatever doesn't divide evenly by the share count stays in the contract uncredited | Read from the code |
+| Paying with Solidity's `transfer` or `send` fails | These forward 2,300 gas, and recording a payment writes to storage, which costs more than that. Pay with `call` instead. This is an EVM limit | `test_KnownLimit_PaymentWith2300GasFails` |
+| `redirectValue` trusts its input | It credits whatever amount you pass. Pass only value the contract actually received, or later redeems will run out of funds | Read from the code |
+| Redeeming costs more with more shares | `redeem()` and `viewAccountTotal()` check each share, up to 1,000 | Read from the code |
+| Small amounts can wait | Up to one wei per share can stay in `remainder` until the next payment, and each generation of SPLITS holds its own | The fuzz test |
 
 <details>
 <summary><strong>More XDC projects</strong></summary>
